@@ -1,0 +1,32 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Environments
+venv/
+.venv/
+env/
+ENV/
+env.bak/
+venv.bak/
+
+# macOS / OS files
+.DS_Store
+.AppleDouble
+.LSOverride
+Thumbs.db
+
+# Editor / IDE settings
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Project specific caches & logs
+*.log
+.pytest_cache/
+
+# Model & Large Data artifacts (optional - uncomment if not using Git LFS)
+# Data_Collection_Training/annotated_data.csv
+# Models/*.pkl
