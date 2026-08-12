@@ -1,3 +1,6 @@
+import subprocess
+import gesture_visualizer
+from collections import deque
 import joblib
 from typing import List
 import cv2
@@ -17,6 +20,23 @@ def result_callback(result: vision.HandLandmarkerResult, output_image: mp.Image,
     global latest_result
     latest_result = result
 
+def parse_result(detection_result, model):
+    if not detection_result or not detection_result.hand_landmarks:
+        return None
+    
+    hand_landmarks_list = detection_result.hand_landmarks
+    handedness_list = detection_result.handedness
+    
+    if len(hand_landmarks_list) == 1:
+        return predict_gesture(handedness_list[0], hand_landmarks_list[0], model)
+    elif len(hand_landmarks_list) >= 2:
+        area1 = hand_area(hand_landmarks_list[0])
+        area2 = hand_area(hand_landmarks_list[1])
+        if area1 >= area2:
+            return predict_gesture(handedness_list[0], hand_landmarks_list[0], model)
+        else:
+            return predict_gesture(handedness_list[1], hand_landmarks_list[1], model)
+    return None
 
 def normalize_coordinates(handedness, hand_landmarks):
 
@@ -56,21 +76,38 @@ def predict_gesture(handedness, hand_landmarks, model):
     return int(prediction)
 
 def hand_area(hand_landmarks):
-    x_coordinates = [landmark.x for landmark in hand_landmarks]
-    y_coordinates = [landmark.y for landmark in hand_landmarks]
+    x_coords = [lm.x for lm in hand_landmarks]
+    y_coords = [lm.y for lm in hand_landmarks]
+    return (max(x_coords) - min(x_coords)) * (max(y_coords) - min(y_coords))
     
-    x_min, x_max = min(x_coordinates), max(x_coordinates)
-    y_min, y_max = min(y_coordinates), max(y_coordinates)
-    
-    width = x_max - x_min
-    height = y_max - y_min
-    area = width * height
-    
-    return area
-    
+def trigger_action(gesture):
+    if gesture == 0:
+        return
+    elif gesture == 1:
+        print("play/pause")
+        subprocess.run(['osascript', '-e', 'tell application "Spotify" to playpause'])
+        return
+    elif gesture == 2:
+        print("volume up")
+        subprocess.run(['osascript', '-e', 'set volume output volume ((output volume of (get volume settings)) + 10)'])
+        return
+    elif gesture == 3:
+        print("volume down")
+        subprocess.run(['osascript', '-e', 'set volume output volume ((output volume of (get volume settings)) - 10)'])
+        return
+    elif gesture == 4:
+        print("previous")
+        subprocess.run(['osascript', '-e', 'tell application "Spotify" to previous track'])
+        return
+    elif gesture == 5:
+        print("next")
+        subprocess.run(['osascript', '-e', 'tell application "Spotify" to next track'])
+        return
+    else:
+        return
 
 def main():
-    print("Starting visualizer... Press 'q' in the video window to quit.")
+    print("Starting gesture assistant...")
     
     model = joblib.load("Models/gesture_model.pkl")
 
@@ -86,26 +123,50 @@ def main():
     # Start webcam feed
     cap = cv2.VideoCapture(0)
 
+    gesture_buffer = deque(maxlen=15)
+    last_action_time = 0
+    
+    print("Gesture Controller Active. Press Ctrl+C in terminal to stop.")
+
     if not cap.isOpened():
         print("Error: Could not open webcam.")
         return
 
-    while cap.isOpened():
-        success, frame = cap.read()
-        if not success:
-            print("Ignoring empty camera frame.")
-            continue
+    try:
+        while cap.isOpened():
+            success, frame = cap.read()
+            if not success:
+                print("Ignoring empty camera frame.")
+                continue
 
-        rgb_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-        mp_image = mp.Image(image_format=mp.ImageFormat.SRGB, data=rgb_frame)
-        
-        timestamp_ms = int(time.time() * 1000)
-        detector.detect_async(mp_image, timestamp_ms)
-        
-        # terminal break
+            rgb_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+            mp_image = mp.Image(image_format=mp.ImageFormat.SRGB, data=rgb_frame)
 
-    cap.release()
-    cv2.destroyAllWindows()
+            timestamp_ms = int(time.time() * 1000)
+            detector.detect_async(mp_image, timestamp_ms)
+            
+            gesture = parse_result(latest_result, model)
+
+            if gesture is not None:
+                gesture_buffer.append(gesture)
+            else:
+                gesture_buffer.clear()
+
+            if len(gesture_buffer) == 15 and len(set(gesture_buffer)) == 1:
+                current_gesture = gesture_buffer[0]
+                cooldown = 0.3 if current_gesture in [2, 3] else 1.5
+                
+                if time.time() - last_action_time > cooldown:
+                    trigger_action(current_gesture)
+                    last_action_time = time.time()
+                    
+                    if current_gesture not in [4, 5]:
+                        gesture_buffer.clear()
+    except KeyboardInterrupt:
+        print("\nStopping gesture assistant...")
+    finally:
+        cap.release()
+        cv2.destroyAllWindows()
 
 if __name__ == "__main__":
     main()
