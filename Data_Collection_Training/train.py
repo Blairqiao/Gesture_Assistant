@@ -43,7 +43,7 @@ def main():
     print(classification_report(y_test, y_pred))
     
     # 6. Save the trained model to disk
-    export_name = "gesture_model.pkl"
+    export_name = "Models/gesture_model.pkl"
     joblib.dump(model, export_name)
     print(f"\nSuccess! Model saved to {export_name}")
 
