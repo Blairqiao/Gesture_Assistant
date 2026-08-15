@@ -97,6 +97,7 @@ Mac_Gesture_Assistant/
    pip install opencv-python mediapipe scikit-learn joblib numpy pandas
    ```
    *(On macOS, `pyobjc-framework-Quartz` is also used by `gesture_assistant.py`)*
+   *(On Windows, `keyboard` is required)*
 
 4. **System Permissions**:
    - **macOS**: Ensure Terminal / your IDE has **Camera** permissions enabled (*System Settings > Privacy & Security > Camera*), as well as Automation permissions if prompted.
