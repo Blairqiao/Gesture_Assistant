@@ -81,23 +81,26 @@ Mac_Gesture_Assistant/
    ```
 
 2. **Create and Activate a Virtual Environment**:
-   - **macOS / Linux**:
+   - **macOS**:
      ```bash
      python3.12 -m venv venv
      source venv/bin/activate
      ```
    - **Windows**:
      ```cmd
-     py -3.12 -m venv venv
-     venv\Scripts\activate
+     python -3.12 -m venv venv
+     .\venv\Scripts\activate
      ```
 
 3. **Install Dependencies**:
-   ```bash
-   pip install opencv-python mediapipe scikit-learn joblib numpy pandas
-   ```
-   *(On macOS, `pyobjc-framework-Quartz` is also used by `gesture_assistant.py`)*
-   *(On Windows, `keyboard` is required)*
+   - **macOS**:
+     ```bash
+      pip install opencv-python mediapipe scikit-learn joblib numpy pandas pyobjc-framework-Quartz 
+     ```
+   - **Windows**:
+     ```cmd
+      pip install opencv-python mediapipe scikit-learn joblib numpy pandas keyboard
+     ```
 
 4. **System Permissions**:
    - **macOS**: Ensure Terminal / your IDE has **Camera** permissions enabled (*System Settings > Privacy & Security > Camera*), as well as Automation permissions if prompted.

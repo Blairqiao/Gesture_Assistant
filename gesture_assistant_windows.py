@@ -4,7 +4,7 @@ from typing import List
 import cv2
 import time
 import math
-import keyboard
+import keyboard # type: ignore
 import mediapipe as mp
 from mediapipe.tasks import python
 from mediapipe.tasks.python import vision
