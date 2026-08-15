@@ -1,40 +1,18 @@
-import sys
 from collections import deque
 import joblib
 from typing import List
 import cv2
 import time
 import math
+import keyboard
 import mediapipe as mp
 from mediapipe.tasks import python
 from mediapipe.tasks.python import vision
-
-# Windows Virtual Key Codes (Win32 API)
-VK_VOLUME_MUTE = 0xAD
-VK_VOLUME_DOWN = 0xAE
-VK_VOLUME_UP = 0xAF
-VK_MEDIA_NEXT_TRACK = 0xB5
-VK_MEDIA_PREV_TRACK = 0xB4
-VK_MEDIA_STOP = 0xB6
-VK_MEDIA_PLAY_PAUSE = 0xB3
-
-KEYEVENTF_EXTENDEDKEY = 0x0001
-KEYEVENTF_KEYUP = 0x0002
 
 BUFFER_SIZE = 15
 CD_PLAY_PAUSE = 1.3
 CD_VOLUME = 0.3
 CD_NEXT_PREV = 1.3
-
-
-def send_win_key(vk_code: int):
-    if sys.platform == "win32":
-        import ctypes
-        ctypes.windll.user32.keybd_event(vk_code, 0, KEYEVENTF_EXTENDEDKEY, 0)
-        ctypes.windll.user32.keybd_event(vk_code, 0, KEYEVENTF_EXTENDEDKEY | KEYEVENTF_KEYUP, 0)
-    else:
-        print(f"[Simulated Win32 Key Event] Virtual Key Code: {hex(vk_code)}")
-
 
 mp_hands = mp.tasks.vision.HandLandmarksConnections
 
@@ -112,21 +90,21 @@ def trigger_action(gesture):
         return
     elif gesture == 1:
         print("play/pause")
-        send_win_key(VK_MEDIA_PLAY_PAUSE)
+        keyboard.send("play/pause")
     elif gesture == 2:
         print("volume up")
         for _ in range(5):
-            send_win_key(VK_VOLUME_UP)
+            keyboard.send("volume up")
     elif gesture == 3:
         print("volume down")
         for _ in range(5):
-            send_win_key(VK_VOLUME_DOWN)
+            keyboard.send("volume down")
     elif gesture == 4:
         print("previous")
-        send_win_key(VK_MEDIA_PREV_TRACK)
+        keyboard.send("previous track")
     elif gesture == 5:
         print("next")
-        send_win_key(VK_MEDIA_NEXT_TRACK)
+        keyboard.send("next track")
 
 
 def main():

@@ -116,7 +116,7 @@ Mac_Gesture_Assistant/
 
 - **On Windows**:
   ```bash
-  python gesture_asssistant_windows.py
+  python gesture_assistant_windows.py
   ```
 
 *Press `Ctrl+C` in the terminal to exit.*
