@@ -298,12 +298,12 @@ def main():
     )
     detector = vision.HandLandmarker.create_from_options(options)
 
-    # Start webcam feed
     cap = cv2.VideoCapture(0)
 
     gesture_buffer = deque(maxlen=buffer_size) #type: ignore
     last_action_time = 0
     last_check_time = time.time()
+    frame_timestamp_ms = 0
     
     print("Gesture Controller Active. Press Ctrl+C in terminal to stop.")
 
@@ -313,7 +313,6 @@ def main():
 
     try:
         while cap.isOpened():
-            # Check for live config updates every second
             if time.time() - last_check_time > 1.0:
                 last_check_time = time.time()
                 if os.path.exists(config_path):
@@ -342,8 +341,17 @@ def main():
             rgb_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
             mp_image = mp.Image(image_format=mp.ImageFormat.SRGB, data=rgb_frame)
 
-            timestamp_ms = int(time.time() * 1000)
-            detector.detect_async(mp_image, timestamp_ms)
+            current_time_ms = int(time.time() * 1000)
+            if current_time_ms <= frame_timestamp_ms:
+                frame_timestamp_ms += 1
+            else:
+                frame_timestamp_ms = current_time_ms
+
+            try:
+                detector.detect_async(mp_image, frame_timestamp_ms)
+            except Exception as e:
+                print(f"Warning: detect_async failed on frame ({e}). Skipping frame.")
+                continue
             
             gesture = parse_result(latest_result, model)
 
