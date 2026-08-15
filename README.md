@@ -76,7 +76,7 @@ Mac_Gesture_Assistant/
 
 1. **Clone the Repository**:
    ```bash
-   git clone https://github.com/YourUsername/Mac_Gesture_Assistant.git
+   git clone https://github.com/Blairqiao/Mac_Gesture_Assistant.git
    cd Mac_Gesture_Assistant
    ```
 
