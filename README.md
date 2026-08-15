@@ -11,21 +11,42 @@
 
 ---
 
+## Table of Contents
+
+- [Features](#features)
+- [Supported Gestures & Actions](#supported-gestures--actions)
+- [Repository Structure](#repository-structure)
+- [Getting Started](#getting-started)
+  - [Prerequisites](#prerequisites)
+  - [Installation](#installation)
+- [Usage](#usage)
+  - [Run the Assistant](#run-the-assistant)
+  - [Run the Gesture Visualizer](#run-the-gesture-visualizer)
+- [Technical Details](#technical-details)
+  - [Feature Vector Normalization](#feature-vector-normalization)
+  - [Model Architecture](#model-architecture)
+- [Train Your Own Model & Customizing The Assistant](#train-your-own-model--customizing-the-assistant)
+  - [Collect Data](#collect-data)
+  - [Train the Model](#train-the-model)
+  - [Customize the Assistant](#customize-the-assistant)
+  - [OSAScript and Python Keyboard Module](#osascript-and-python-keyboard-module)
+- [Tech Stack](#tech-stack)
+- [License](#license)
+
+---
+
 ## Features
 
 - **Real-Time Hand Tracking**: Powered by MediaPipe Tasks API (`HandLandmarker`) tracking 21 3D hand landmarks per hand with live-stream video feed.
 - **Custom Gesture Classifier**: Trained Random Forest model classifying custom hand posture vectors.
-- **Robust Feature Normalization**:
-  - **Origin Invariance**: Wrist landmark $(P_0)$ set as the origin $(0,0,0)$.
-  - **Scale Invariance**: Coordinates scaled by the Euclidean distance between wrist $(P_0)$ and middle finger MCP $(P_9)$.
-  - **Handedness Aware**: Incorporates left/right hand classification into the feature representation.
+- **Custom Gesture Automation**: Uses hand gestures to preform automated tasks such as controlling media playback, system volume, and Youtube media controls.
+- **Cross Platform Compatibility**: Works on both macOS and Windows with dedicated scripts for each platform.
 - **Gesture Debouncing & Smoothing**: Deque-based buffer ($15$ consecutive matching frames) with dynamic cooldowns ($0.3\text{s}$ for volume adjustments, $1.3\text{s}$ for track control) to eliminate jitter and unintended triggers.
-- **Cross-Platform OS Automation**:
-  - **macOS (`gesture_assistant.py`)**: Uses AppleScript (`osascript`) & `Quartz` for Spotify, universal macOS media keys, and Chrome YouTube controls with `config.toml` support.
-  - **Windows (`gesture_asssistant_windows.py`)**: Uses native Win32 API (`ctypes.windll.user32.keybd_event`) for universal Windows media controls (Spotify, YouTube in Chrome/Edge/Firefox, iTunes, Windows Media Player).
-- **Interactive Visualizer**: Built-in visual debugging tool overlaying hand landmark skeletons and real-time prediction overlays onto webcam feeds.
-- **Complete Pipeline**: Includes data collection utilities, visual debugging scripts, and model training code.
-
+- **Multi-Modal Settings**: Features three distinct modes for controlling media playback: Spotify, YouTube, and Universal media controls (macOS only, the Windows version only has universal controls). 
+  - **Spotify**: Only controls the Spotify app, can be used in the background with no impact on other apps. 
+  - **Universal**: Controls media playback for the media app in the foreground. Can be used with any media player including Spotify, YouTube(Next Track/Previous Track only works in playlists), Apple Music, etc. 
+  - **YouTube**: Same Play/Pause functionality as **Universal** but Next Track/Previous Track is replaced by skip 15 seconds forwards/backwards. The exact time can be configured in `config.toml`.
+  
 ---
 
 ## Supported Gestures & Actions
@@ -35,8 +56,8 @@
 | 🖐️ **Palm Up** | `palm up` | Play / Pause | Spotify / Universal Media |
 | 👍 **Thumbs Up** | `thumbs up` | Increase Volume (+10%) | System Volume |
 | 👎 **Thumbs Down** | `thumbs down` | Decrease Volume (-10%) | System Volume |
-| 👈 **Point Left** | `point left` | Previous Track / Skip Back | Spotify / Universal Media / YouTube |
-| 👉 **Point Right** | `point right` | Next Track / Skip Forward | Spotify / Universal Media / YouTube |
+| 👈 **Point Left** | `point left` | Previous Track / Skip Back 15 Seconds | Spotify / Universal Media / YouTube |
+| 👉 **Point Right** | `point right` | Next Track / Skip Forward 15 Seconds | Spotify / Universal Media / YouTube |
 
 ---
 
@@ -53,7 +74,7 @@ Mac_Gesture_Assistant/
 │   ├── gesture_model.pkl            # Serialized Random Forest classifier
 │   └── hand_landmarker.task         # MediaPipe hand landmarker vision task model
 │
-├── Data_Collection_Training/
+├── Data_Training/
 │   ├── train.py                     # Script to train Random Forest classifier on annotated dataset
 │   ├── hand_feature_extraction_visualizer.py # Utility to preview landmark extraction
 │   └── annotated_data.csv           # Formatted CSV dataset containing hand feature vectors
@@ -110,7 +131,7 @@ Mac_Gesture_Assistant/
 
 ## Usage
 
-### 1. Run the Assistant
+### Run the Assistant
 
 - **On macOS**:
   ```bash
@@ -125,19 +146,12 @@ Mac_Gesture_Assistant/
 
 *Press `Ctrl+C` in the terminal to exit.*
 
-### 2. Run the Gesture Visualizer
+### Run the Gesture Visualizer
 To view live camera output with rendered hand skeletons and predicted gesture labels:
 ```bash
 python gesture_visualizer.py
 ```
 *Press `q` while focused on the video window to exit.*
-
-### 3. Re-train the Gesture Model
-To retrain the Random Forest model using `Data_Collection_Training/annotated_data.csv`:
-```bash
-python Data_Collection_Training/train.py
-```
-The newly trained model will be exported to `Models/gesture_model.pkl`.
 
 ---
 
@@ -161,6 +175,30 @@ Hand landmark coordinates extracted by MediaPipe are 3D point positions relative
 ### Model Architecture
 - **Classifier**: `RandomForestClassifier` (100 estimators, max depth 15)
 - **Evaluation Metric**: Stratified accuracy evaluation on unseen test split (~20%).
+
+---
+
+## Train Your Own Model & Customizing The Assistant
+If you want to take this project further to meet your own personal needs/intrests, here is how you can get started:
+
+### Collect Data
+1. Record several 30 second videos of yourself(1 for each hand, so 2 videos for each gesture) doing the gestures you want to use for the assistant. Be sure to record some netural poses as well.
+2. Use the [Gesture Annotator Tool](https://github.com/Blairqiao/Hand_Gesture_Annotator) to annotate said videos and save the extracted features as a csv.
+3. Import the data into this project, replacing 'annotated_data.csv' with your new dataset.
+
+### Train the Model
+```bash
+python Data_Training/train.py
+```
+The newly trained model will be exported to the `Models` folder. Be sure to either replace the existing gesture_model.pkl with your own or rename your model and update the `gesture_model.pkl` reference in `gesture_assistant.py` to point to your new model.
+
+
+### Customize the Assistant
+By default, the assistant has 5 gesture slots, with labels 1-5 for each gesture and 0 for no gesture. In the `trigger_gesture()` method, you can modify the scripts associated with each label to perform any action you want. If your model has more than 5 gestures, be sure to add the corresponding mappings within this method. 
+
+### OSAScript and Python Keyboard Module
+  - On macOS, you can use Mac's built in apple script([osascript](https://victorscholz.medium.com/what-is-osascript-e48f11b8dec6)) to preform actions.
+  - On Windows, you can use the python [keyboard](https://github.com/boppreh/keyboard) module to customize keyboard macros and perform other actions.
 
 ---
 

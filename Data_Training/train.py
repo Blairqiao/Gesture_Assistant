@@ -39,7 +39,6 @@ def main():
     print(f"\n--- Model Accuracy: {accuracy * 100:.2f}% ---")
     
     print("\nDetailed Classification Report:")
-    # This breaks down accuracy for each specific gesture
     print(classification_report(y_test, y_pred))
     
     # 6. Save the trained model to disk
