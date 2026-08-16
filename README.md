@@ -76,7 +76,6 @@ Mac_Gesture_Assistant/
 │
 ├── Data_Training/
 │   ├── train.py                     # Script to train Random Forest classifier on annotated dataset
-│   ├── hand_feature_extraction_visualizer.py # Utility to preview landmark extraction
 │   └── annotated_data.csv           # Formatted CSV dataset containing hand feature vectors
 │
 ├── README.md                        # Project documentation
