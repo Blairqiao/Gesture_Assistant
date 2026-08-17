@@ -5,7 +5,7 @@ from sklearn.metrics import accuracy_score, classification_report
 import joblib
 
 def main():
-    csv_file = "Data_Collection_Training/annotated_data.csv" 
+    csv_file = "Data_Training/annotated_data.csv" 
     
     print(f"Loading data from {csv_file}...")
     df = pd.read_csv(csv_file)

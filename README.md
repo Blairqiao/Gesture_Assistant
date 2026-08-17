@@ -9,8 +9,6 @@
 
 **Gesture Assistant** is a real-time computer vision and machine learning tool for **macOS** and **Windows** that translates hand gestures captured via webcam into system actions and media controls. Built using **Google MediaPipe**, **OpenCV**, and **Scikit-Learn**, it seamlessly controls media playback and system volume using native macOS AppleScript (`osascript`) / Quartz integration and Windows Win32 API media keys (`ctypes`).
 
----
-
 ## Table of Contents
 
 - [Features](#features)
@@ -33,8 +31,6 @@
 - [Tech Stack](#tech-stack)
 - [License](#license)
 
----
-
 ## Features
 
 - **Real-Time Hand Tracking**: Powered by MediaPipe Tasks API (`HandLandmarker`) tracking 21 3D hand landmarks per hand with live-stream video feed.
@@ -47,8 +43,6 @@
   - **Universal**: Controls media playback for the media app in the foreground. Can be used with any media player including Spotify, YouTube(Next Track/Previous Track only works in playlists), Apple Music, etc. 
   - **YouTube**: Same Play/Pause functionality as **Universal** but Next Track/Previous Track is replaced by skip 15 seconds forwards/backwards. The exact time can be configured in `config.toml`.
   
----
-
 ## Supported Gestures & Actions
 
 | Gesture | Label | Action Triggered | Target System |
@@ -58,8 +52,6 @@
 | 👎 **Thumbs Down** | `thumbs down` | Decrease Volume (-10%) | System Volume |
 | 👈 **Point Left** | `point left` | Previous Track / Skip Back 15 Seconds | Spotify / Universal Media / YouTube |
 | 👉 **Point Right** | `point right` | Next Track / Skip Forward 15 Seconds | Spotify / Universal Media / YouTube |
-
----
 
 ## Repository Structure
 
@@ -82,8 +74,6 @@ Mac_Gesture_Assistant/
 ├── README.md                        # Project documentation
 └── .gitignore                       # Git ignore specifications
 ```
-
----
 
 ## Getting Started
 
@@ -127,8 +117,6 @@ Mac_Gesture_Assistant/
    - **macOS**: Ensure Terminal / your IDE has **Camera** permissions enabled (*System Settings > Privacy & Security > Camera*), as well as Automation permissions if prompted.
    - **Windows**: Ensure Camera privacy settings allow desktop apps to access your camera (*Settings > Privacy & security > Camera*).
 
----
-
 ## Usage
 
 ### Run the Assistant
@@ -153,8 +141,6 @@ python gesture_visualizer.py
 ```
 *Press `q` while focused on the video window to exit.*
 
----
-
 ## Technical Details
 
 ### Feature Vector Normalization
@@ -175,8 +161,6 @@ Hand landmark coordinates extracted by MediaPipe are 3D point positions relative
 ### Model Architecture
 - **Classifier**: `RandomForestClassifier` (100 estimators, max depth 15)
 - **Evaluation Metric**: Stratified accuracy evaluation on unseen test split (~20%).
-
----
 
 ## Train Your Own Model & Customizing The Assistant
 If you want to take this project further to meet your own personal needs/intrests, here is how you can get started:
@@ -200,7 +184,6 @@ By default, the assistant has 5 gesture slots, with labels 1-5 for each gesture 
   - On macOS, you can use Mac's built in apple script([osascript](https://victorscholz.medium.com/what-is-osascript-e48f11b8dec6)) to preform actions.
   - On Windows, you can use the python [keyboard](https://github.com/boppreh/keyboard) module to customize keyboard macros and perform other actions.
 
----
 
 ## Tech Stack
 
@@ -209,8 +192,11 @@ By default, the assistant has 5 gesture slots, with labels 1-5 for each gesture 
 - **macOS Integration**: Python `subprocess`, AppleScript (`osascript`), `Quartz`
 - **Windows Integration**: Win32 API (`ctypes.windll.user32.keybd_event`)
 
----
-
 ## License
 
 This project is open source under the MIT License.
+
+## Developer Profile
+**Built by Blair Qiao** | *University of Texas at Austin*
+* **GitHub:** [@Blairqiao](https://github.com/Blairqiao)
+* **Contact:** yanzhe.qiao.1@gmail.com
