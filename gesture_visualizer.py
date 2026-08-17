@@ -137,7 +137,7 @@ def main():
         
         annotated_frame = draw_landmarks_on_image(frame, latest_result, model)
         
-        cv2.imshow('Mac Gesture Assistant', annotated_frame)
+        cv2.imshow('Gesture Assistant', annotated_frame)
         
         if cv2.waitKey(1) & 0xFF == ord('q'):
             break

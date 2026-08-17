@@ -56,7 +56,7 @@
 ## Repository Structure
 
 ```
-Mac_Gesture_Assistant/
+Gesture_Assistant/
 ├── gesture_assistant.py             # macOS application with config-driven media automation
 ├── gesture_assistant_windows.py    # Windows standalone application with Win32 media keys
 ├── gesture_visualizer.py            # Debug visualizer displaying webcam feed & predictions
@@ -86,8 +86,8 @@ Mac_Gesture_Assistant/
 
 1. **Clone the Repository**:
    ```bash
-   git clone https://github.com/Blairqiao/Mac_Gesture_Assistant.git
-   cd Mac_Gesture_Assistant
+   git clone https://github.com/Blairqiao/Gesture_Assistant.git
+   cd Gesture_Assistant
    ```
 
 2. **Create and Activate a Virtual Environment**:
