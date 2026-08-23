@@ -1,4 +1,4 @@
-system = "music"
+system = "spotify"
 youtube_skip_time = 15
 buffer_size = 15
 

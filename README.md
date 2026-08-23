@@ -7,7 +7,7 @@
 [![OpenCV](https://img.shields.io/badge/OpenCV-Computer_Vision-5C3EE8?style=for-the-badge&logo=opencv&logoColor=white)](https://opencv.org/)
 [![scikit-learn](https://img.shields.io/badge/scikit--learn-Random_Forest-F7931E?style=for-the-badge&logo=scikit-learn&logoColor=white)](https://scikit-learn.org/)
 
-**Gesture Assistant** is a real-time computer vision and machine learning tool for **macOS** and **Windows** that translates hand gestures captured via webcam into system actions and media controls. Built using **Google MediaPipe**, **OpenCV**, and **Scikit-Learn**, it seamlessly controls media playback and system volume using native macOS AppleScript (`osascript`) / Quartz integration and Windows Win32 API media keys (`ctypes`).
+**Gesture Assistant** is a real-time computer vision and machine learning tool for **macOS** and **Windows** that translates hand gestures captured via webcam into system actions and media controls. Built using **Google MediaPipe**, **OpenCV**, and **Scikit-Learn**, it seamlessly controls media playback and system volume using native macOS AppleScript (`osascript`) / Quartz integration and Windows media keys (`keyboard`).
 
 ## Table of Contents
 
@@ -58,7 +58,7 @@
 ```
 Gesture_Assistant/
 ├── gesture_assistant.py             # macOS application with config-driven media automation
-├── gesture_assistant_windows.py    # Windows standalone application with Win32 media keys
+├── gesture_assistant_windows.py    # Windows standalone application with Windows media keys
 ├── gesture_visualizer.py            # Debug visualizer displaying webcam feed & predictions
 ├── config.toml                      # macOS configuration file (system target, cooldowns)
 │
@@ -189,7 +189,7 @@ By default, the assistant has 5 gesture slots, with labels 1-5 for each gesture 
 - **Computer Vision**: OpenCV (`cv2`), MediaPipe (`mediapipe.tasks.python.vision`)
 - **Machine Learning**: Scikit-Learn (`sklearn.ensemble.RandomForestClassifier`), Joblib
 - **macOS Integration**: Python `subprocess`, AppleScript (`osascript`), `Quartz`
-- **Windows Integration**: Win32 API (`ctypes.windll.user32.keybd_event`)
+- **Windows Integration**: Python `keyboard` module
 
 ## License
 
@@ -198,4 +198,7 @@ This project is open source under the MIT License.
 ## Developer Profile
 **Built by Blair Qiao** | *University of Texas at Austin*
 * **GitHub:** [@Blairqiao](https://github.com/Blairqiao)
+* **LinkedIn:** [Yanzhe(Blair) Qiao](https://www.linkedin.com/in/yanzhe-qiao-794551413/)
+* **Portfolio:** https://blairqiao.com
 * **Contact:** yanzhe.qiao.1@gmail.com
+
