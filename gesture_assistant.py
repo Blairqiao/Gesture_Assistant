@@ -292,6 +292,7 @@ def main():
     base_options = python.BaseOptions(model_asset_path='Models/hand_landmarker.task')
     options = vision.HandLandmarkerOptions(
         base_options=base_options, 
+        min_hand_detection_confidence = 0.9,
         num_hands=2,
         running_mode=vision.RunningMode.LIVE_STREAM,
         result_callback=result_callback
