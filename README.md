@@ -13,6 +13,7 @@
 
 - [Features](#features)
 - [Supported Gestures & Actions](#supported-gestures--actions)
+- [Demo](#demo)
 - [Repository Structure](#repository-structure)
 - [Getting Started](#getting-started)
   - [Prerequisites](#prerequisites)
@@ -52,6 +53,14 @@
 | 👎 **Thumbs Down** | `thumbs down` | Decrease Volume (-10%) | System Volume |
 | 👈 **Point Left** | `point left` | Previous Track / Skip Back 15 Seconds | Spotify / Universal Media / YouTube |
 | 👉 **Point Right** | `point right` | Next Track / Skip Forward 15 Seconds | Spotify / Universal Media / YouTube |
+
+## Demo
+
+### Right Hand Tracking
+![alt text](/Readme_assets/right_hand_tracking.gif)
+
+### Left Hand Tracking
+![alt text](/Readme_assets/left_hand_tracking.gif)
 
 ## Repository Structure
 
