@@ -27,6 +27,7 @@ Thumbs.db
 *.log
 .pytest_cache/
 
+pyrefly.toml
 # Model & Large Data artifacts (optional - uncomment if not using Git LFS)
 # Data_Collection_Training/annotated_data.csv
 # Models/*.pkl
