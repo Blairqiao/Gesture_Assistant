@@ -88,7 +88,7 @@ Gesture_Assistant/
 ### Prerequisites
 
 - **Operating System**: macOS or Windows 10/11
-- **Python**: Version **3.12** *(MediaPipe Tasks API is currently not compatible with Python 3.13+)*
+- **Python**: Version **3.11** or **3.12** *(MediaPipe Tasks API is currently not compatible with Python 3.13+)*
 - **Webcam**: Built-in FaceTime HD / laptop camera or external USB webcam
 
 ### Installation
@@ -112,18 +112,18 @@ Gesture_Assistant/
      ```
 
 3. **Install Dependencies**:
-   - **macOS**:
-     ```bash
-      pip install opencv-python mediapipe scikit-learn joblib numpy pandas pyobjc-framework-Quartz 
-     ```
-   - **Windows**:
-     ```cmd
-      pip install opencv-python mediapipe scikit-learn joblib numpy pandas keyboard
-     ```
+   Install the unified cross-platform dependencies:
+   ```bash
+   pip install -r requirements.txt
+   ```
 
-4. **System Permissions**:
-   - **macOS**: Ensure Terminal / your IDE has **Camera** permissions enabled (*System Settings > Privacy & Security > Camera*), as well as Automation permissions if prompted.
-   - **Windows**: Ensure Camera privacy settings allow desktop apps to access your camera (*Settings > Privacy & security > Camera*).
+4. **System Permissions & Requirements**:
+   - **macOS**:
+     - **Camera**: Ensure Terminal / your IDE has Camera permissions enabled (*System Settings > Privacy & Security > Camera*).
+     - **Accessibility**: Required for universal media keys via Quartz (*System Settings > Privacy & Security > Accessibility*).
+     - **Google Chrome (YouTube Mode)**: In Chrome, enable *View > Developer > Allow JavaScript from Apple Events*.
+   - **Windows**:
+     - Ensure Camera privacy settings allow desktop apps to access your camera (*Settings > Privacy & security > Camera*).
 
 ## Usage
 

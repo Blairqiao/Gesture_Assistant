@@ -1,3 +1,4 @@
+import os
 from collections import deque
 import joblib
 from typing import List
@@ -8,6 +9,10 @@ import keyboard # type: ignore
 import mediapipe as mp
 from mediapipe.tasks import python
 from mediapipe.tasks.python import vision
+import warnings
+warnings.filterwarnings("ignore", category=UserWarning)
+
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
 BUFFER_SIZE = 15
 CD_PLAY_PAUSE = 1.3
@@ -112,9 +117,18 @@ def main():
     print(f"Target: Universal Windows Media Controls")
     print(f"Cooldowns - Play/Pause: {CD_PLAY_PAUSE}s, Volume: {CD_VOLUME}s, Next/Prev: {CD_NEXT_PREV}s | Buffer Size: {BUFFER_SIZE}")
 
-    model = joblib.load("Models/gesture_model.pkl")
+    model_path = os.path.join(BASE_DIR, "Models", "gesture_model.pkl")
+    task_path = os.path.join(BASE_DIR, "Models", "hand_landmarker.task")
+    if not os.path.exists(model_path):
+        print(f"Error: Model file not found at {model_path}")
+        return
+    if not os.path.exists(task_path):
+        print(f"Error: MediaPipe task file not found at {task_path}")
+        return
 
-    base_options = python.BaseOptions(model_asset_path='Models/hand_landmarker.task')
+    model = joblib.load(model_path)
+
+    base_options = python.BaseOptions(model_asset_path=task_path)
     options = vision.HandLandmarkerOptions(
         base_options=base_options, 
         min_hand_detection_confidence = 0.9,
@@ -130,19 +144,25 @@ def main():
     gesture_buffer = deque(maxlen=BUFFER_SIZE) #type: ignore
     last_action_time = 0
     frame_timestamp_ms = 0
+    consecutive_empty_frames = 0
     
     print("Windows Gesture Controller Active. Press Ctrl+C in terminal to stop.")
 
     if not cap.isOpened():
-        print("Error: Could not open webcam.")
+        print("Error: Could not open webcam. Check camera connection and Windows privacy permissions.")
         return
 
     try:
         while cap.isOpened():
             success, frame = cap.read()
             if not success:
-                print("Ignoring empty camera frame.")
+                consecutive_empty_frames += 1
+                if consecutive_empty_frames >= 30:
+                    print("\n[!] Lost webcam feed (30 consecutive empty frames).")
+                    print("[!] Please check that your webcam is connected and that camera privacy permissions are enabled.")
+                    break
                 continue
+            consecutive_empty_frames = 0
 
             rgb_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
             mp_image = mp.Image(image_format=mp.ImageFormat.SRGB, data=rgb_frame)

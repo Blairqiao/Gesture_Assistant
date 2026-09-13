@@ -1,3 +1,4 @@
+import os
 import joblib
 from typing import List
 import cv2
@@ -7,6 +8,10 @@ import numpy as np
 import mediapipe as mp
 from mediapipe.tasks import python
 from mediapipe.tasks.python import vision
+import warnings
+warnings.filterwarnings("ignore", category=UserWarning)
+
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
 mp_hands = mp.tasks.vision.HandLandmarksConnections
 mp_drawing = mp.tasks.vision.drawing_utils
@@ -39,7 +44,6 @@ def draw_landmarks_on_image(bgr_image, detection_result, model):
         handedness = handedness_list[idx]
         gesture = predict_gesture(handedness, hand_landmarks, model)
 
-
         # Draw the hand landmarks using the Tasks API
         mp_drawing.draw_landmarks(
             annotated_image,
@@ -51,16 +55,18 @@ def draw_landmarks_on_image(bgr_image, detection_result, model):
         height, width, _ = annotated_image.shape
         x_coordinates = [landmark.x for landmark in hand_landmarks]
         y_coordinates = [landmark.y for landmark in hand_landmarks]
-        text_x = int(min(x_coordinates) * width)
-        text_y = int(min(y_coordinates) * height) - MARGIN
+        text_x = max(MARGIN, int(min(x_coordinates) * width))
+        text_y = max(MARGIN + 20, int(min(y_coordinates) * height) - MARGIN)
 
-        cv2.putText(annotated_image, f"{handedness[0].category_name} - {gestures[gesture]}",
+        category_name = handedness[0].category_name if len(handedness) > 0 else "Hand"
+        cv2.putText(annotated_image, f"{category_name} - {gestures[gesture]}",
                     (text_x, text_y), cv2.FONT_HERSHEY_DUPLEX,
                     FONT_SIZE, HANDEDNESS_TEXT_COLOR, FONT_THICKNESS, cv2.LINE_AA)
 
     return annotated_image
 
-def normalize_coordinates(hand_landmarks):
+def normalize_coordinates(handedness, hand_landmarks):
+    handedness_val = float(handedness[0].index)
 
     # Raw 3D coordinates [(x, y, z), ...]
     raw_coords = [(lm.x, lm.y, lm.z) for lm in hand_landmarks]
@@ -86,27 +92,30 @@ def normalize_coordinates(hand_landmarks):
     for x, y, z in scaled_coords:
         final_vector.extend([x, y, z])
 
-    return final_vector
+    return [handedness_val] + final_vector
 
 def predict_gesture(handedness, hand_landmarks, model):
-    vector_coordinates = normalize_coordinates(hand_landmarks)
-    if not vector_coordinates:
+    features = normalize_coordinates(handedness, hand_landmarks)
+    if not features:
         return 0
-
-    handedness_val = float(handedness[0].index)
-
-    features = [handedness_val] + vector_coordinates
     prediction = model.predict([features])[0]
-    
     return int(prediction)
-    
 
 def main():
-    print("Starting visualizer... Press 'q' in the video window to quit.")
+    print("Starting visualizer... Press 'q' or close the video window to quit.")
     
-    model = joblib.load("Models/gesture_model.pkl")
+    model_path = os.path.join(BASE_DIR, "Models", "gesture_model.pkl")
+    task_path = os.path.join(BASE_DIR, "Models", "hand_landmarker.task")
+    if not os.path.exists(model_path):
+        print(f"Error: Model file not found at {model_path}")
+        return
+    if not os.path.exists(task_path):
+        print(f"Error: MediaPipe task file not found at {task_path}")
+        return
 
-    base_options = python.BaseOptions(model_asset_path='Models/hand_landmarker.task')
+    model = joblib.load(model_path)
+
+    base_options = python.BaseOptions(model_asset_path=task_path)
     options = vision.HandLandmarkerOptions(
         base_options=base_options, 
         min_hand_detection_confidence=0.9,
@@ -120,27 +129,45 @@ def main():
     cap = cv2.VideoCapture(0)
 
     if not cap.isOpened():
-        print("Error: Could not open webcam.")
+        print("Error: Could not open webcam. Check camera connection and permissions.")
         return
+
+    frame_timestamp_ms = 0
+    consecutive_empty_frames = 0
 
     while cap.isOpened():
         success, frame = cap.read()
         if not success:
-            print("Ignoring empty camera frame.")
+            consecutive_empty_frames += 1
+            if consecutive_empty_frames >= 30:
+                print("\n[!] Lost webcam feed (30 consecutive empty frames). Exiting.")
+                break
             continue
+        consecutive_empty_frames = 0
 
         rgb_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
         mp_image = mp.Image(image_format=mp.ImageFormat.SRGB, data=rgb_frame)
         
-        timestamp_ms = int(time.time() * 1000)
-        detector.detect_async(mp_image, timestamp_ms)
-        
+        current_time_ms = int(time.time() * 1000)
+        if current_time_ms <= frame_timestamp_ms:
+            frame_timestamp_ms += 1
+        else:
+            frame_timestamp_ms = current_time_ms
+
+        try:
+            detector.detect_async(mp_image, frame_timestamp_ms)
+        except Exception as e:
+            print(f"Warning: detect_async failed on frame ({e}). Skipping frame.")
+            continue
         
         annotated_frame = draw_landmarks_on_image(frame, latest_result, model)
         
         cv2.imshow('Gesture Assistant', annotated_frame)
         
-        if cv2.waitKey(1) & 0xFF == ord('q'):
+        key = cv2.waitKey(1) & 0xFF
+        if key == ord('q'):
+            break
+        if cv2.getWindowProperty('Gesture Assistant', cv2.WND_PROP_VISIBLE) < 1:
             break
 
     cap.release()

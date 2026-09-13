@@ -12,9 +12,17 @@ import mediapipe as mp
 from mediapipe.tasks import python
 from mediapipe.tasks.python import vision
 import Quartz
+import warnings
+warnings.filterwarnings("ignore", category=UserWarning)
 
 
-def load_config(config_path="config.toml"):
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+DEFAULT_CONFIG_PATH = os.path.join(BASE_DIR, "config.toml")
+
+
+def load_config(config_path=None):
+    if config_path is None:
+        config_path = DEFAULT_CONFIG_PATH
     default_config = {
         "system": "spotify",
         "cooldowns": {
@@ -34,7 +42,9 @@ def load_config(config_path="config.toml"):
         return default_config
 
 
-def save_config(config, config_path="config.toml"):
+def save_config(config, config_path=None):
+    if config_path is None:
+        config_path = DEFAULT_CONFIG_PATH
     try:
         lines = []
         if "system" in config:
@@ -57,7 +67,9 @@ def save_config(config, config_path="config.toml"):
         print(f"Error saving {config_path}: {e}")
 
 
-def run_setup(config_path="config.toml"):
+def run_setup(config_path=None):
+    if config_path is None:
+        config_path = DEFAULT_CONFIG_PATH
     print("\n==========================================")
     print("      Mac Gesture Assistant Setup         ")
     print("==========================================")
@@ -187,6 +199,20 @@ def send_media_key(key_type):
     Quartz.CGEventPost(0, ev_up.CGEvent()) #type: ignore
 
 
+def run_applescript(script_str: str, failure_hint: str = "") -> bool:
+    try:
+        res = subprocess.run(['osascript', '-e', script_str], capture_output=True, text=True)
+        if res.returncode != 0:
+            if failure_hint:
+                print(f"[!] {failure_hint}")
+            return False
+        return True
+    except Exception as e:
+        if failure_hint:
+            print(f"[!] {failure_hint} ({e})")
+        return False
+
+
 def trigger_action(gesture, config=None):
     system = config.get("system", "spotify") if config else "spotify"
     if gesture == 0:
@@ -194,22 +220,34 @@ def trigger_action(gesture, config=None):
     elif gesture == 1:
         print(f"play/pause ({system})")
         if system == "spotify":
-            subprocess.run(['osascript', '-e', 'tell application "Spotify" to playpause'])
+            run_applescript(
+                'tell application "Spotify" to playpause',
+                "Spotify command failed. Ensure the Spotify desktop app is installed and running."
+            )
         else:
             send_media_key(16)
         return
     elif gesture == 2:
         print("volume up")
-        subprocess.run(['osascript', '-e', 'set volume output volume ((output volume of (get volume settings)) + 10)'])
+        run_applescript(
+            'set volume output volume ((output volume of (get volume settings)) + 10)',
+            "Volume adjustment failed. Your active audio device may not support system volume control."
+        )
         return
     elif gesture == 3:
         print("volume down")
-        subprocess.run(['osascript', '-e', 'set volume output volume ((output volume of (get volume settings)) - 10)'])
+        run_applescript(
+            'set volume output volume ((output volume of (get volume settings)) - 10)',
+            "Volume adjustment failed. Your active audio device may not support system volume control."
+        )
         return
     elif gesture == 4:
         print("previous")
         if system == "spotify":
-            subprocess.run(['osascript', '-e', 'tell application "Spotify" to previous track'])
+            run_applescript(
+                'tell application "Spotify" to previous track',
+                "Spotify command failed. Ensure the Spotify desktop app is installed and running."
+            )
         elif system == "music":
             send_media_key(20)
         else:
@@ -233,12 +271,18 @@ def trigger_action(gesture, config=None):
             end tell
             '''
 
-            subprocess.run(['osascript', '-e', youtube_prev10])
+            run_applescript(
+                youtube_prev10,
+                "YouTube control failed. In Google Chrome, enable 'View > Developer > Allow JavaScript from Apple Events'."
+            )
         return
     elif gesture == 5:
         print("next")
         if system == "spotify":
-            subprocess.run(['osascript', '-e', 'tell application "Spotify" to next track'])
+            run_applescript(
+                'tell application "Spotify" to next track',
+                "Spotify command failed. Ensure the Spotify desktop app is installed and running."
+            )
         elif system == "music":
             send_media_key(19)
         else:
@@ -262,17 +306,20 @@ def trigger_action(gesture, config=None):
             end tell
             '''
 
-            subprocess.run(['osascript', '-e', youtube_next10])
+            run_applescript(
+                youtube_next10,
+                "YouTube control failed. In Google Chrome, enable 'View > Developer > Allow JavaScript from Apple Events'."
+            )
         return
     else:
         return
 
 def main():
     if "--setup" in sys.argv or "-s" in sys.argv:
-        run_setup()
+        run_setup(DEFAULT_CONFIG_PATH)
 
     print("Starting gesture assistant...")
-    config_path = "config.toml"
+    config_path = DEFAULT_CONFIG_PATH
     config = load_config(config_path)
     last_config_mtime = os.path.getmtime(config_path) if os.path.exists(config_path) else 0
 
@@ -287,9 +334,18 @@ def main():
     print(f"Loaded configuration for system target: {system}")
     print(f"Cooldowns - Play/Pause: {cd_play_pause}s, Volume: {cd_volume}s, Next/Prev: {cd_next_prev}s | Buffer Size: {buffer_size}")
 
-    model = joblib.load("Models/gesture_model.pkl")
+    model_path = os.path.join(BASE_DIR, "Models", "gesture_model.pkl")
+    task_path = os.path.join(BASE_DIR, "Models", "hand_landmarker.task")
+    if not os.path.exists(model_path):
+        print(f"Error: Model file not found at {model_path}")
+        return
+    if not os.path.exists(task_path):
+        print(f"Error: MediaPipe task file not found at {task_path}")
+        return
 
-    base_options = python.BaseOptions(model_asset_path='Models/hand_landmarker.task')
+    model = joblib.load(model_path)
+
+    base_options = python.BaseOptions(model_asset_path=task_path)
     options = vision.HandLandmarkerOptions(
         base_options=base_options, 
         min_hand_detection_confidence = 0.9,
@@ -305,11 +361,12 @@ def main():
     last_action_time = 0
     last_check_time = time.time()
     frame_timestamp_ms = 0
+    consecutive_empty_frames = 0
     
     print("Gesture Controller Active. Press Ctrl+C in terminal to stop.")
 
     if not cap.isOpened():
-        print("Error: Could not open webcam.")
+        print("Error: Could not open webcam. Check camera connection and permissions.")
         return
 
     try:
@@ -336,8 +393,13 @@ def main():
 
             success, frame = cap.read()
             if not success:
-                print("Ignoring empty camera frame.")
+                consecutive_empty_frames += 1
+                if consecutive_empty_frames >= 30:
+                    print("\n[!] Lost webcam feed (30 consecutive empty frames).")
+                    print("[!] Please check that your webcam is connected and that camera permissions are enabled.")
+                    break
                 continue
+            consecutive_empty_frames = 0
 
             rgb_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
             mp_image = mp.Image(image_format=mp.ImageFormat.SRGB, data=rgb_frame)

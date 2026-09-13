@@ -1,12 +1,19 @@
+import os
 import pandas as pd
 from sklearn.model_selection import train_test_split
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import accuracy_score, classification_report
 import joblib
 
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
 def main():
-    csv_file = "Data_Training/annotated_data.csv" 
+    csv_file = os.path.join(BASE_DIR, "Data_Training", "annotated_data.csv") 
     
+    if not os.path.exists(csv_file):
+        print(f"Error: Dataset not found at {csv_file}")
+        return
+
     print(f"Loading data from {csv_file}...")
     df = pd.read_csv(csv_file)
     
@@ -42,7 +49,9 @@ def main():
     print(classification_report(y_test, y_pred))
     
     # 6. Save the trained model to disk
-    export_name = "Models/gesture_model.pkl"
+    models_dir = os.path.join(BASE_DIR, "Models")
+    os.makedirs(models_dir, exist_ok=True)
+    export_name = os.path.join(models_dir, "gesture_model.pkl")
     joblib.dump(model, export_name)
     print(f"\nSuccess! Model saved to {export_name}")
 
